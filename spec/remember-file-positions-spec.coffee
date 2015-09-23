@@ -1,62 +1,79 @@
 RememberFilePositions = require '../lib/remember-file-positions'
-
-# Use the command `window:run-package-specs` (cmd-alt-ctrl-p) to run specs.
-#
-# To run a specific `it` or `describe` block add an `f` to the front (e.g. `fit`
-# or `fdescribe`). Remove the `f` to unfocus the block.
+{Point} = require 'atom'
 
 describe "RememberFilePositions", ->
-  [workspaceElement, activationPromise] = []
+  [rememberFilePositions, workspaceElement, fixturesPath, fixture] = []
 
   beforeEach ->
+    fixturesPath = atom.project.getPaths()[0]
+    fixture = fixturesPath + '/test.js'
+
     workspaceElement = atom.views.getView(atom.workspace)
-    activationPromise = atom.packages.activatePackage('remember-file-positions')
+    jasmine.attachToDOM(workspaceElement)
 
-  describe "when the remember-file-positions:toggle event is triggered", ->
-    it "hides and shows the modal panel", ->
-      # Before the activation event the view is not on the DOM, and no panel
-      # has been created
-      expect(workspaceElement.querySelector('.remember-file-positions')).not.toExist()
+    waitsForPromise ->
+      atom.packages.activatePackage('remember-file-positions').then (pack) ->
+        rememberFilePositions = pack.mainModule
 
-      # This is an activation event, triggering it will cause the package to be
-      # activated.
-      atom.commands.dispatch workspaceElement, 'remember-file-positions:toggle'
+  describe "when a file is opened", ->
+    describe "and there is an entry for that file's URI", ->
+      beforeEach ->
+        rememberFilePositions.fileNumbers[fixture] = new Point(169, 9)
+        waitsForPromise ->
+          atom.workspace.open('test.js')
 
+      it "moves the cursor position to the saved position and scrolls the view", ->
+        item = atom.workspace.getActivePaneItem()
+
+        waitsFor "editor to attach", 1000, ->
+          item.getLineHeightInPixels() > 0
+
+        runs ->
+          expect(item.getCursorBufferPosition().row).toBe 169
+          expect(item.getCursorBufferPosition().column).toBe 9
+          # I don't know how to set the size of the spec window smaller in order to force scrolling.
+          # expect(item.displayBuffer.getScrollTop()).toBe 100
+
+    describe "and there is no entry for that file's URI", ->
+      beforeEach ->
+        waitsForPromise ->
+          atom.workspace.open('test.js')
+
+      it "does not change the cursor position", ->
+        item = atom.workspace.getActivePaneItem()
+
+        waitsFor "editor to attach", 1000, ->
+          item.getLineHeightInPixels() > 0
+
+        runs ->
+          expect(item.getCursorBufferPosition().row).toBe 0
+          expect(item.getCursorBufferPosition().column).toBe 0
+
+    describe "and a line number is specified", ->
+      it "does not change the cursor position", ->
+      beforeEach ->
+        rememberFilePositions.fileNumbers[fixture] = new Point(169, 9)
+        waitsForPromise ->
+          atom.workspace.open('test.js', {initialLine: 10})
+
+      it "does not change the cursor position", ->
+        item = atom.workspace.getActivePaneItem()
+
+        waitsFor "editor to attach", 1000, ->
+          item.getLineHeightInPixels() > 0
+
+        runs ->
+          expect(item.getCursorBufferPosition().row).toBe 10
+          expect(item.getCursorBufferPosition().column).toBe 0
+
+  describe "when an editor's cursor position changes", ->
+    beforeEach ->
       waitsForPromise ->
-        activationPromise
+        atom.workspace.open(fixture)
 
-      runs ->
-        expect(workspaceElement.querySelector('.remember-file-positions')).toExist()
-
-        rememberFilePositionsElement = workspaceElement.querySelector('.remember-file-positions')
-        expect(rememberFilePositionsElement).toExist()
-
-        rememberFilePositionsPanel = atom.workspace.panelForItem(rememberFilePositionsElement)
-        expect(rememberFilePositionsPanel.isVisible()).toBe true
-        atom.commands.dispatch workspaceElement, 'remember-file-positions:toggle'
-        expect(rememberFilePositionsPanel.isVisible()).toBe false
-
-    it "hides and shows the view", ->
-      # This test shows you an integration test testing at the view level.
-
-      # Attaching the workspaceElement to the DOM is required to allow the
-      # `toBeVisible()` matchers to work. Anything testing visibility or focus
-      # requires that the workspaceElement is on the DOM. Tests that attach the
-      # workspaceElement to the DOM are generally slower than those off DOM.
-      jasmine.attachToDOM(workspaceElement)
-
-      expect(workspaceElement.querySelector('.remember-file-positions')).not.toExist()
-
-      # This is an activation event, triggering it causes the package to be
-      # activated.
-      atom.commands.dispatch workspaceElement, 'remember-file-positions:toggle'
-
-      waitsForPromise ->
-        activationPromise
-
-      runs ->
-        # Now we can test for view visibility
-        rememberFilePositionsElement = workspaceElement.querySelector('.remember-file-positions')
-        expect(rememberFilePositionsElement).toBeVisible()
-        atom.commands.dispatch workspaceElement, 'remember-file-positions:toggle'
-        expect(rememberFilePositionsElement).not.toBeVisible()
+    it "stores the new cursor position for that editor", ->
+      item = atom.workspace.getActivePaneItem()
+      
+      expect(item.getCursorBufferPosition().row).toBe 0
+      item.setCursorBufferPosition(new Point(169, 9))
+      expect(rememberFilePositions.fileNumbers[fixture].row).toBe 169

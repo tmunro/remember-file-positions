@@ -1,3 +1,2 @@
 ## 0.1.0 - First Release
-* Every feature added
-* Every bug fixed
+* Added storage and restoration of cursor position for closed TextEditors 
