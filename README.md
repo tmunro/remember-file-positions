@@ -1,4 +1,4 @@
-# remember-file-positions package
+# remember-file-positions
 
 Stores last cursor position for any file and restores it when that file is re-opened. Very useful for reminding you of your previous editing context, even if you haven't edited that file in many sessions.
 

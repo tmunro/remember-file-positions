@@ -1,3 +1,5 @@
+## 0.1.4 - Fix interference with non-TextEditor items
+* Fixed attachment to non-TextEditor items and subsequent disruption of tabs
 ## 0.1.3 - Remove console.log
 * Removed some debug info
 ## 0.1.2 - Remove keymap

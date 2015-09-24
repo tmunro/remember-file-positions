@@ -12,18 +12,18 @@ module.exports = RememberFilePositions =
       @subscriptions.add editor.onDidChangeCursorPosition (event) =>
         @handleChangeCursorPosition(event)
 
-    @subscriptions.add atom.workspace.onDidAddPaneItem (editor) =>
-      @handleAddPaneItem(editor)
+    @subscriptions.add atom.workspace.onDidAddTextEditor (event) =>
+      @handleAddTextEditor(event)
 
-  handleAddPaneItem: (editor) ->
-    uri = editor.item.getURI()
-    currentPosition = editor.item.getCursorBufferPosition()
+  handleAddTextEditor: (event) ->
+    uri = event.textEditor.getURI()
+    currentPosition = event.textEditor.getCursorBufferPosition()
     if @fileNumbers[uri]? and currentPosition.row == 0
       # We need to know when the editor is actually attached in order to scroll.
       # Otherwise the `lineHeight` of the editor view is 0, and scrolling is impossible.
-      view = atom.views.getView(editor.item)
+      view = atom.views.getView(event.textEditor)
       @subscriptions.add view.onDidAttach =>
-        editor.item.setCursorBufferPosition(@fileNumbers[uri], {center: true})
+        event.textEditor.setCursorBufferPosition(@fileNumbers[uri], {center: true})
 
   handleChangeCursorPosition: (event) ->
     @fileNumbers[event.cursor.editor.getURI()] = event.newBufferPosition
