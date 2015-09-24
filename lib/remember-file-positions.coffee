@@ -11,6 +11,8 @@ module.exports = RememberFilePositions =
     @filePositions = state.filePositionsState ? {}
 
     @subscriptions.add atom.workspace.observeTextEditors (editor) =>
+      @subscriptions.add editor.onDidChangeScrollTop (scroll) =>
+        @handleChangeScroll(scroll, editor)
       @subscriptions.add editor.onDidChangeCursorPosition (event) =>
         @handleChangeCursorPosition(event)
 
@@ -19,12 +21,8 @@ module.exports = RememberFilePositions =
 
   handleAddTextEditor: (event) ->
     uri = event.textEditor.getURI()
-
-    @subscriptions.add event.textEditor.onDidChangeScrollTop (scroll) =>
-      @handleChangeScroll(scroll, uri)
-
     currentPosition = event.textEditor.getCursorBufferPosition()
-    if @fileNumbers[uri]? and currentPosition.row == 0
+    if @fileNumbers[uri]? and currentPosition.row is 0
       # We need to know when the editor is actually attached in order to scroll.
       # Otherwise the `lineHeight` of the editor view is 0, and scrolling is impossible.
       view = atom.views.getView(event.textEditor)
@@ -32,13 +30,14 @@ module.exports = RememberFilePositions =
         position = @filePositions[uri]
         event.textEditor.setCursorBufferPosition(@fileNumbers[uri])
         if position?
-          event.textEditor.setScrollTop(position)
+          event.textEditor.setScrollTop(event.textEditor.displayBuffer.pixelPositionForScreenPosition(position).top)
 
   handleChangeCursorPosition: (event) ->
     @fileNumbers[event.cursor.editor.getURI()] = event.newBufferPosition
 
-  handleChangeScroll: (scroll, uri) ->
-    @filePositions[uri] = scroll
+  handleChangeScroll: (scroll, editor) ->
+    screenPosition = editor.displayBuffer.screenPositionForPixelPosition({top: scroll, left: 0})
+    @filePositions[editor.getURI()] = screenPosition
 
   deactivate: ->
     @subscriptions.dispose()
