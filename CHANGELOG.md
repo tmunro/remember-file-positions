@@ -1,3 +1,5 @@
+## 0.1.5 - Add restoration of scroll position
+* Added restoration of scroll position in addition to cursor position
 ## 0.1.4 - Fix interference with non-TextEditor items
 * Fixed attachment to non-TextEditor items and subsequent disruption of tabs
 ## 0.1.3 - Remove console.log
