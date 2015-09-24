@@ -1,7 +1,7 @@
 {
   "name": "remember-file-positions",
   "main": "./lib/remember-file-positions",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Remembers the last position a file was open at even if that file has since been closed. Inspired by Vim's file marks.",
   "keywords": [],
   "repository": "https://github.com/tmunro/remember-file-positions",
