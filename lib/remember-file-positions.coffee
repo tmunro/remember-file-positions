@@ -6,8 +6,6 @@ module.exports = RememberFilePositions =
 
   activate: (state) ->
     @subscriptions = new CompositeDisposable
-    console.log(state)
-    console.log(state.fileNumbersState)
     @fileNumbers = state.fileNumbersState ? {}
 
     @subscriptions.add atom.workspace.observeTextEditors (editor) =>
