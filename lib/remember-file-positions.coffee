@@ -12,7 +12,7 @@ module.exports = RememberFilePositions =
 
     @subscriptions.add atom.workspace.observeTextEditors (editor) =>
       @handleAddTextEditor(editor)
-      @subscriptions.add editor.onDidChangeScrollTop (scroll) =>
+      @subscriptions.add atom.views.getView(editor).onDidChangeScrollTop (scroll) =>
         @handleChangeScroll(scroll, editor)
       @subscriptions.add editor.onDidChangeCursorPosition (event) =>
         @handleChangeCursorPosition(event)
@@ -34,15 +34,19 @@ module.exports = RememberFilePositions =
 
   setCursorAndScroll: (editor, uri) ->
     position = @filePositions[uri]
+    view = atom.views.getView(editor)
     editor.setCursorBufferPosition(@fileNumbers[uri])
     if position?
-      editor.setScrollTop(editor.displayBuffer.pixelPositionForScreenPosition(position).top)
+      view.setScrollTop(position.top)
+      view.setScrollLeft(position.left)
 
   handleChangeCursorPosition: (event) ->
     @fileNumbers[event.cursor.editor.getURI()] = event.newBufferPosition
 
   handleChangeScroll: (scroll, editor) ->
-    screenPosition = editor.displayBuffer.screenPositionForPixelPosition({top: scroll, left: 0})
+    # editor.displayBuffer.pixelPositionForScreenPosition(position)
+    view = atom.views.getView(editor)
+    screenPosition = {top: view.getScrollTop(), left: view.getScrollLeft()}
     @filePositions[editor.getURI()] = screenPosition
 
   deactivate: ->

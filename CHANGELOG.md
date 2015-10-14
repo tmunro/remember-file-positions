@@ -1,3 +1,5 @@
+## 0.2.0 - Use new logical scroll coordinates from Atom 1.1
+* This fixes the scroll position restoration on Atom 1.1
 ## 0.1.6 - Restore scroll position when re-opening Atom
 * Workaround to fix Atom's broken scroll restoration when re-opening Atom / new workspaces
 ## 0.1.5 - Add restoration of scroll position
