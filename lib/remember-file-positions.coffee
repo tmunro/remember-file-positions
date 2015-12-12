@@ -1,4 +1,4 @@
-{CompositeDisposable, TextEditor} = require 'atom'
+{CompositeDisposable} = require 'atom'
 
 module.exports = RememberFilePositions =
   subscriptions: null
