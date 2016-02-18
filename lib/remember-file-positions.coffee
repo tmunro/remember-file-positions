@@ -11,7 +11,6 @@ module.exports = RememberFilePositions =
     @subscriptions = new CompositeDisposable
     @fileNumbers = state.fileNumbersState ? {}
     @filePositions = state.filePositionsState ? {}
-    @attachedElements = []
 
     @subscriptions.add atom.workspace.observeTextEditors (editor) =>
       editorElement = getView(editor)
