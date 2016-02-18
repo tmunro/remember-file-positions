@@ -11,43 +11,39 @@ module.exports = RememberFilePositions =
     @filePositions = state.filePositionsState ? {}
 
     @subscriptions.add atom.workspace.observeTextEditors (editor) =>
-      @handleAddTextEditor(editor)
-      @subscriptions.add atom.views.getView(editor).onDidChangeScrollTop (scroll) =>
-        @handleChangeScroll(scroll, editor)
-      @subscriptions.add editor.onDidChangeCursorPosition (event) =>
-        @handleChangeCursorPosition(event)
+      editorElement = atom.views.getView(editor)
+      uri = editor.getURI()
+      {row} = editor.getCursorBufferPosition()
+      if @fileNumbers[uri]? and (row in [0, @fileNumbers[uri].row])
+        # HACK Atom to scroll to the cursor position of any TextEditors when this package is activated.
+        # This is only necessary because Atom incorrectly applies deserialized scroll values.
+        @restorePosition(editor)
 
-  handleAddTextEditor: (editor) ->
+        # We need to know when the editor is actually attached in order to scroll.
+        # Otherwise the `lineHeight` of the editor view is 0, and scrolling is impossible.
+        disposable = editorElement.onDidAttach =>
+          disposable.dispose()
+          @restorePosition(editor)
+
+      # Preserve scroll position
+      @subscriptions.add editorElement.onDidChangeScrollTop =>
+        @filePositions[editor.getURI()] =
+          top: editorElement.getScrollTop()
+          left: editorElement.getScrollLeft()
+
+      # Preserve cursor position
+      @subscriptions.add editor.onDidChangeCursorPosition ({newBufferPosition}) =>
+        @fileNumbers[editor.getURI()] = newBufferPosition
+
+  restorePosition: (editor) ->
     uri = editor.getURI()
-    currentPosition = editor.getCursorBufferPosition()
+    if (cursorPosition = @fileNumbers[uri])?
+      editor.setCursorBufferPosition(cursorPosition)
 
-    if @fileNumbers[uri]? and (currentPosition.row is 0 or currentPosition.row is @fileNumbers[uri].row)
-      # HACK Atom to scroll to the cursor position of any TextEditors when this package is activated.
-      # This is only necessary because Atom incorrectly applies deserialized scroll values.
-      @setCursorAndScroll(editor, uri)
-
-      # We need to know when the editor is actually attached in order to scroll.
-      # Otherwise the `lineHeight` of the editor view is 0, and scrolling is impossible.
-      view = atom.views.getView(editor)
-      @subscriptions.add view.onDidAttach =>
-        @setCursorAndScroll(editor, uri)
-
-  setCursorAndScroll: (editor, uri) ->
-    position = @filePositions[uri]
-    view = atom.views.getView(editor)
-    editor.setCursorBufferPosition(@fileNumbers[uri])
-    if position?
-      view.setScrollTop(position.top)
-      view.setScrollLeft(position.left)
-
-  handleChangeCursorPosition: (event) ->
-    @fileNumbers[event.cursor.editor.getURI()] = event.newBufferPosition
-
-  handleChangeScroll: (scroll, editor) ->
-    # editor.displayBuffer.pixelPositionForScreenPosition(position)
-    view = atom.views.getView(editor)
-    screenPosition = {top: view.getScrollTop(), left: view.getScrollLeft()}
-    @filePositions[editor.getURI()] = screenPosition
+    if (scrollState = @filePositions[uri])?
+      editorElement = atom.views.getView(editor)
+      editorElement.setScrollTop(scrollState.top)
+      editorElement.setScrollLeft(scrollState.left)
 
   deactivate: ->
     @subscriptions.dispose()
