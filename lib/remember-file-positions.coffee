@@ -1,7 +1,5 @@
 {CompositeDisposable} = require 'atom'
 
-getView = atom.views.getView.bind(atom.views)
-
 module.exports = RememberFilePositions =
   subscriptions: null
   fileNumbers: {}
@@ -13,7 +11,7 @@ module.exports = RememberFilePositions =
     @filePositions = state.filePositionsState ? {}
 
     @subscriptions.add atom.workspace.observeTextEditors (editor) =>
-      editorElement = getView(editor)
+      editorElement = atom.views.getView(editor)
       uri = editor.getURI()
       {row} = editor.getCursorBufferPosition()
       if @fileNumbers[uri]? and (row in [0, @fileNumbers[uri].row])
@@ -23,7 +21,7 @@ module.exports = RememberFilePositions =
 
         # We need to know when the editor is actually attached in order to scroll.
         # Otherwise the `lineHeight` of the editor view is 0, and scrolling is impossible.
-        disposable = getView(editor).onDidAttach =>
+        disposable = editorElement.onDidAttach =>
           disposable.dispose()
           @restorePosition(editor)
 
@@ -43,7 +41,7 @@ module.exports = RememberFilePositions =
       editor.setCursorBufferPosition(cursorPosition)
 
     if (scrollState = @filePositions[uri])?
-      editorElement = getView(editor)
+      editorElement = atom.views.getView(editor)
       editorElement.setScrollTop(scrollState.top)
       editorElement.setScrollLeft(scrollState.left)
 
