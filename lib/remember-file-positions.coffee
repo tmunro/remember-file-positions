@@ -29,14 +29,15 @@ module.exports = RememberFilePositions =
       # We need to know when the editor is actually attached in order to scroll.
       # Otherwise the `lineHeight` of the editor view is 0, and scrolling is impossible.
       view = atom.views.getView(editor)
-      @subscriptions.add view.onDidAttach =>
+      disposable = view.onDidAttach =>
+        disposable.dispose()
         @setCursorAndScroll(editor, uri)
 
   setCursorAndScroll: (editor, uri) ->
     position = @filePositions[uri]
-    view = atom.views.getView(editor)
     editor.setCursorBufferPosition(@fileNumbers[uri])
     if position?
+      view = atom.views.getView(editor)
       view.setScrollTop(position.top)
       view.setScrollLeft(position.left)
 
