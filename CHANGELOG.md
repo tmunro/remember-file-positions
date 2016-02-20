@@ -1,3 +1,5 @@
+## 0.2.2 - Fix split-pane issue from PR #5
+* Fixed a split-pane issue found in PR #5 by @t9md
 ## 0.2.0 - Use new logical scroll coordinates from Atom 1.1
 * This fixes the scroll position restoration on Atom 1.1
 ## 0.1.6 - Restore scroll position when re-opening Atom
