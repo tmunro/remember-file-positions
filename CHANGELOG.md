@@ -1,3 +1,5 @@
+## 0.2.3 - Fix another split-pane issue from PR #9
+* Merge fix for a split-pane issue found in PR #9 by @t9md
 ## 0.2.2 - Fix split-pane issue from PR #5
 * Fixed a split-pane issue found in PR #5 by @t9md
 ## 0.2.0 - Use new logical scroll coordinates from Atom 1.1
