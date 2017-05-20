@@ -22,16 +22,20 @@ module.exports = RememberFilePositions =
     currentPosition = editor.getCursorBufferPosition()
 
     if @fileNumbers[uri]? and (currentPosition.row is 0 or currentPosition.row is @fileNumbers[uri].row)
-      # HACK Atom to scroll to the cursor position of any TextEditors when this package is activated.
-      # This is only necessary because Atom incorrectly applies deserialized scroll values.
-      @setCursorAndScroll(editor, uri)
-
-      # We need to know when the editor is actually attached in order to scroll.
-      # Otherwise the `lineHeight` of the editor view is 0, and scrolling is impossible.
+      # There is the situation when editorElement.getScrollTop() return 0 but
+      # editorElement.component.getScrollTop return underfined.
+      # In this case, setting setScrollTop via editorElement.setScrollTop()
+      # cause editor blank on subsequent pane-split.
+      # In other word, editorElement.getScrollTop is NOT beliebable, this is why we need to check
+      # component.getScrollTop() return valid value before trying to setScrollTop.
       view = atom.views.getView(editor)
-      disposable = view.onDidAttach =>
-        disposable.dispose()
+      if view.component.getScrollTop()?
         @setCursorAndScroll(editor, uri)
+      else
+        disposable = view.onDidChangeScrollTop =>
+          disposable.dispose()
+          disposable = null
+          @setCursorAndScroll(editor, uri)
 
   setCursorAndScroll: (editor, uri) ->
     position = @filePositions[uri]
