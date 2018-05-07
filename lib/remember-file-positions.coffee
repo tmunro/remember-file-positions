@@ -42,8 +42,11 @@ module.exports = RememberFilePositions =
     editor.setCursorBufferPosition(@fileNumbers[uri])
     if position?
       view = atom.views.getView(editor)
-      view.setScrollTop(position.top)
-      view.setScrollLeft(position.left)
+      # Have to setImmediate else these setScroll* have no effect
+      # - TODO Figure out why...
+      setImmediate =>
+        view.setScrollTop(position.top)
+        view.setScrollLeft(position.left)
 
   handleChangeCursorPosition: (event) ->
     @fileNumbers[event.cursor.editor.getURI()] = event.newBufferPosition
